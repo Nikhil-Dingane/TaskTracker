@@ -4,8 +4,8 @@ import java.time.LocalTime;
 public class TaskEntry implements Serializable{
 	private LocalTime startTime;
 	private LocalTime endTime;
-	String type;
-	String description;
+	private String type;
+	private String description;
 	
 	public TaskEntry() {
 		
