@@ -66,7 +66,7 @@ class AppDriver {
                             	   System.out.println("Enter Description :");
                             	   String Description = bufferReader.readLine();
                             	   taskEntry.setDescription(Description);
-                            	   taskList.edit(taskNumber,taskEntry);
+                            	   taskList.update(taskNumber,taskEntry);
                             	   System.out.println("************************* Task Updated Successfully **************************");
                             	   System.out.println(taskEntry.toString());
                             	   taskLists.add(taskList);
