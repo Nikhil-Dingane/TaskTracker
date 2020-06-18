@@ -8,6 +8,7 @@ import java.util.List;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.time.DateTimeException;
 
 
 class AppDriver {
@@ -54,32 +55,38 @@ class AppDriver {
                     	   System.out.println("\nPlease Enter Your Choice: ");
                     	   int editRemoveChoice = getChoice(1,2);
                     		
-                    	   System.out.println("\nPlease Enter Your Task Number :");
-                    	   int taskNumber = getChoice(1,10)-1;
+                    	   
                     		
-			   switch(editRemoveChoice) {
+			   switch(editRemoveChoice) { 
                            	case 1:
+
                             	   System.out.println("****************************** Update Task ******************************");
+                                   System.out.println("\nPlease Enter Your Task Number :");
+                    	           int taskNumberForEdit = getChoice(1,10)-1;
                             	   System.out.println("Enter End Time :");
                             	   LocalTime newEndTime = getLocalTime();
                             	   taskEntry.setEndTime(newEndTime);
                             	   System.out.println("Enter Description :");
                             	   String Description = bufferReader.readLine();
                             	   taskEntry.setDescription(Description);
-                            	   taskList.update(taskNumber,taskEntry);
+                            	   taskList.update(taskNumberForEdit,taskEntry);
                             	   System.out.println("************************* Task Updated Successfully **************************");
                             	   System.out.println(taskEntry.toString());
                             	   taskLists.add(taskList);
                                    writeInTodaysFile(taskList);
+                                   
                             	break;
                         	case 2: 
                             	   System.out.println("****************************** Remove Record ******************************");
-                            	   taskList.delete(taskNumber);
+                                   System.out.println("\nPlease Enter Your Task Number :");
+                    	           int taskNumberForDelete = getChoice(1,10)-1;
+                            	   taskList.delete(taskNumberForDelete);
                             	   System.out.println("************************** Task Removed Successfully **************************");
                             	   taskLists.add(taskList);
                                    writeInTodaysFile(taskList);
                             	break;
                     	   } 
+                           
                    
                     	break;
                 
@@ -122,22 +129,22 @@ class AppDriver {
               			   listDisplayManager.showListMonthWise(Month,Year);
               		        break;
                     	   }    
-		      break;
+		       break;
 
-	              case 4:
-	                 try{
+	               case 4:
+	                  try{
 	                    fileReader = new FileReader(getTodaysFileName());
 	                    TaskList todaysTasks = fileReader.readList();
 	                    System.out.println(todaysTasks);
-	                 } catch (Exception e) {
-                            System.out.println("Unable to read File!!");
-	                    e.printStackTrace();
-	                 } finally {
-                            fileReader.close();
-                         }
+	                  } catch (Exception e) {
+                             System.out.println("Unable to read File!!");
+	                     e.printStackTrace();
+	                  } finally {
+                             fileReader.close();
+                          }
                        break;
 
-	              case 5:
+	               case 5:
                          System.out.println("\nDo You want to Finish ?(Yes or No)");
                          String finishOrNot = bufferReader.readLine();
                          if(finishOrNot.equalsIgnoreCase("Yes")) {
@@ -190,55 +197,76 @@ class AppDriver {
 
      public static String getTodaysFileName() throws IOException {
         LocalDate currentDate = LocalDate.now();
-        String fileName = currentDate.toString() + ".ser";
+	int Date = currentDate.getDayOfMonth();
+	Month currentMonth = currentDate.getMonth();
+	int Year = currentDate.getYear();
+	String fileNameYear = Integer.toString(Year);
+        String fileName = Date + "_" + currentMonth + "_" + fileNameYear + ".ser";
         File file = new File("fileName");
         return fileName;
     }
 
     public static int getChoice(int lowerBound, int upperBound) throws IOException {
         BufferedReader bufferReader = new BufferedReader(new InputStreamReader(System.in));
-        int	Choice = 0;
+        int Choice = 0;
         int lowBound = lowerBound;
         int upBound = upperBound;
         while(true) {
             try {
 		Choice = Integer.parseInt(bufferReader.readLine());
-       	   } catch (NumberFormatException e) {
-		System.out.println("Please enter number as a input.");
-		bufferReader.readLine();
-           } catch (Exception e) {
+            } catch (NumberFormatException e) {
+                System.out.println("Please Enter Only Number.");
+            } catch (Exception e) {
 		e.printStackTrace();
-           } 
-           if(Choice >= lowerBound && Choice <= upperBound) {
-              return Choice;
-           } else {
-              System.out.println("\nYour input is Wrong");
-              System.out.println("Please try Again!!!");
-              getChoice(lowBound,upBound);
-           }
-        
+            } 
+            if(Choice < lowerBound && Choice > upperBound) {
+               getChoice(lowBound,upBound);
+            }
+           return Choice;
         }
     }
 
     public static LocalTime getLocalTime() throws IOException {
         BufferedReader bufferReader = new BufferedReader(new InputStreamReader(System.in));
 	System.out.println("Note: The Time is 24 Hours");
-        System.out.println("Enter Hour :");
-        int Hour =  getChoice(1,24);
-        System.out.println("Enter Minute :");
-        int Minute =  getChoice(1,60);
-        return LocalTime.of(Hour,Minute);
+        int Hour = 0, Minute = 0;
+        while(true) {
+            try {
+                System.out.println("Enter Hour :");
+                Hour = Integer.parseInt(bufferReader.readLine());  
+                System.out.println("Enter Minute :");
+                Minute =  Integer.parseInt(bufferReader.readLine());
+                return LocalTime.of(Hour,Minute);
+           } catch(DateTimeException e) {
+                System.out.println("Please Enter Valid Hours(00-23)");
+           } catch (NumberFormatException e) {
+                System.out.println("Please Enter Only Number.");
+           } catch(Exception e) {
+                e.printStackTrace();
+          }
+       }
     }
+
 
     public static LocalDate getLocalDate() throws IOException {
         BufferedReader bufferReader = new BufferedReader(new InputStreamReader(System.in));
-        System.out.println("Enter Day Date :");
-        int Date = getChoice(1,31);
-        System.out.println("Enter Month :");
-        int Month = getChoice(1,12);
-        System.out.println("Enter Year :");
-        int Year = getChoice(2020, 2300);
-        return LocalDate.of(Year,Month,Date);
+        while(true) {
+            try {
+                System.out.println("Enter Day Date :");
+                int Date = Integer.parseInt(bufferReader.readLine());
+                System.out.println("Enter Month :");
+                int Month = Integer.parseInt(bufferReader.readLine());
+                System.out.println("Enter Year :");
+                int Year = Integer.parseInt(bufferReader.readLine());
+                return LocalDate.of(Year,Month,Date);
+           } catch(DateTimeException e) {
+                System.out.println("Please Enter Valid Date:(1-31), Month:(1-12) Year(2000-2300");
+           } catch(NumberFormatException e) {
+                System.out.println("Please Enter Only Number With Valid Date:(1-31), Month:(1-12), Year(2000-2300");
+           } catch(Exception e) {
+               e.printStackTrace();
+           }
+       }
     }
 
     public static TaskEntry getEntryInfo() throws IOException {
