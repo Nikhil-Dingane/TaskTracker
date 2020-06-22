@@ -1,14 +1,15 @@
 import java.io.Serializable;
 import java.time.LocalTime;
 
-public class TaskEntry implements Serializable{
+@SuppressWarnings("serial")
+public class TaskEntry implements Serializable {
 	private LocalTime startTime;
 	private LocalTime endTime;
 	private String type;
 	private String description;
-	
+
 	public TaskEntry() {
-		
+
 	}
 
 	public TaskEntry(LocalTime startTime, LocalTime endTime, String type, String description) {
@@ -18,7 +19,7 @@ public class TaskEntry implements Serializable{
 		this.type = type;
 		this.description = description;
 	}
-	
+
 	public LocalTime getStartTime() {
 		return startTime;
 	}
@@ -52,17 +53,19 @@ public class TaskEntry implements Serializable{
 	}
 
 	public String toString() {
-		return String.format("%10s %10s   %-15s %s", startTime.toString(),endTime.toString(),type,description);
+		return String.format("%10s %10s   %-15s %s", startTime.toString(), endTime.toString(), type, description);
 	}
+
 	public boolean equals(Object obj) {
-		TaskEntry taskEntry = (TaskEntry)obj;
-		
-		if(taskEntry != null && taskEntry instanceof TaskEntry) {
-			if((taskEntry.startTime == this.startTime) && (taskEntry.endTime == this.endTime) && (taskEntry.type == this.type)) {
+		TaskEntry taskEntry = (TaskEntry) obj;
+
+		if (taskEntry != null && taskEntry instanceof TaskEntry) {
+			if ((taskEntry.startTime == this.startTime) && (taskEntry.endTime == this.endTime)
+					&& (taskEntry.type == this.type)) {
 				return true;
 			}
 		}
-		
+
 		return false;
 	}
 }

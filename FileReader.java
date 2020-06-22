@@ -23,7 +23,7 @@ public class FileReader {
 		}
 	}
 
-	@SuppressWarnings({ "unchecked", "finally" })
+	@SuppressWarnings("unchecked")
 	public List<TaskList> readLists() {
 		List<TaskList> addressBookList = new ArrayList<TaskList>();
 
