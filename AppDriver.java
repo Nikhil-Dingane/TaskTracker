@@ -9,6 +9,7 @@ import java.time.LocalDate;
 import java.time.Month;
 import java.time.Year;
 import java.time.DateTimeException;
+import java.lang.ArrayIndexOutOfBoundsException;
 
 class AppDriver {
     public static void main(String Args[]) throws IOException {
@@ -170,6 +171,7 @@ class AppDriver {
                         case 1:
                             System.out.println("\nPlease Enter Date That You Want to Remove :");
                             LocalDate removeBySingleDate = getLocalDate();
+                            System.out.println(removeBySingleDate);
                             System.out.println(removeBySingleDate.getMonth()+"_"+removeBySingleDate.getYear()+".ser");
                             fileReader = new FileReader(removeBySingleDate.getMonth()+"_"+removeBySingleDate.getYear()+".ser");
                             listsOfTaskLists = fileReader.readLists();
@@ -330,25 +332,32 @@ class AppDriver {
         return taskEntry;                                                       
     }
 
-    public static LocalTime getLocalTime() throws IOException {
+    public static LocalTime getLocalTime(String cancelValue) throws IOException {
         BufferedReader bufferReader = new BufferedReader(new InputStreamReader(System.in));
-	System.out.println("Note: The Time is 24 Hours");
+        LocalTime localTime = null;
+	    System.out.println("Note: The Time is 24 Hours");
         int Hour = 0, Minute = 0;
         while(true) {
-            try {
-                System.out.println("Enter Hour :");
-                Hour = Integer.parseInt(bufferReader.readLine());  
-                System.out.println("Enter Minute :");
-                Minute =  Integer.parseInt(bufferReader.readLine());
-                return LocalTime.of(Hour,Minute);
-           } catch(DateTimeException e) {
-                System.out.println("Please Enter Valid Hours : (00-23), Minutes : (00-59) Again:");
-           } catch (NumberFormatException e) {
-                System.out.println("Please Enter Only Number :");
-           } catch(Exception e) {
-                e.printStackTrace();
-           }
-       }
+            if(cancelValue.equalsIgnoreCase("Cancel")) {
+                return null;
+            } else {
+                try {
+                    String Time= bufferReader.readLine();  
+                    String TimeConvertor[] = Time.split(":");
+                    Hour = Integer.parseInt(TimeConvertor[0]);
+                    Minute = Integer.parseInt(TimeConvertor[1]);
+                    return LocalTime.of(Hour, Minute);
+                } catch(ArrayIndexOutOfBoundsException e){
+                    System.out.println("ERROR : Please Enter Time in Following Format (HH : MM) :");
+                } catch(DateTimeException e) {
+                    System.out.println("ERROR : Please Enter Valid Time (0-23 : 0:59) in Format (HH:MM):");
+                } catch (NumberFormatException e) {
+                    System.out.println("ERROR : Please Enter Only Numbers In Format (HH:MM) :");
+                } catch(Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
     }
 
     public static void writeInTodaysFile(TaskList taskList) throws IOException {
@@ -393,19 +402,23 @@ class AppDriver {
 
     public static LocalDate getLocalDate() throws IOException {
         BufferedReader bufferReader = new BufferedReader(new InputStreamReader(System.in));
+        int DateDay = 0;
+        int month;
+        int Year = 0;
         while(true) {
             try {
-                System.out.println("Enter Date of Day :");
-                int Date = Integer.parseInt(bufferReader.readLine());
-                System.out.println("Enter Month :");
-                int Month = Integer.parseInt(bufferReader.readLine());
-                System.out.println("Enter Year :");
-                int Year = Integer.parseInt(bufferReader.readLine());
-                return LocalDate.of(Year,Month,Date);
+                String Date = bufferReader.readLine();
+                String formatDate[] = Date.split("/");
+                DateDay = Integer.parseInt(formatDate[0]);
+                month = Integer.parseInt(formatDate[1]);
+                Year = Integer.parseInt(formatDate[2]);
+                return LocalDate.of(Year,month,DateDay);
+           } catch(ArrayIndexOutOfBoundsException e){
+               System.out.println("\nERROR : Please Enter Date in Format(DD/MM/YYYY) Again :");
            } catch(DateTimeException e) {
-                System.out.println("Please Enter Valid Date:(1-31), Month:(1-12) Year(2000-2300) :");
+                System.out.println("\nERROR : Please Enter Valid Date in Format(DD/MM/YYYY) :");
            } catch(NumberFormatException e) {
-                System.out.println("Please Enter Only Number With Valid Date:(1-31), Month:(1-12), Year(2000-2300):");
+                System.out.println("\nERROR : Please Enter Only Numbers in Format(DD/MM/YYYY) :");
            } catch(Exception e) {
                e.printStackTrace();
            }
