@@ -2,7 +2,7 @@ import java.io.Serializable;
 import java.time.LocalTime;
 
 @SuppressWarnings("serial")
-public class TaskEntry implements Serializable {
+public class TaskEntry implements Serializable,Cloneable {
 	private LocalTime startTime;
 	private LocalTime endTime;
 	private String type;
@@ -68,4 +68,14 @@ public class TaskEntry implements Serializable {
 
 		return false;
 	}
+	
+	 public Object clone() throws CloneNotSupportedException { 
+		 TaskEntry taskEntryCopy = (TaskEntry)super.clone(); 
+		 taskEntryCopy.startTime = LocalTime.of(startTime.getHour(),startTime.getMinute());
+		 taskEntryCopy.endTime = LocalTime.of(endTime.getHour(),endTime.getMinute());
+		 taskEntryCopy.type = new String(this.type);
+		 taskEntryCopy.description = new String(this.description);
+		 return taskEntryCopy; 
+	 } 
+	
 }
