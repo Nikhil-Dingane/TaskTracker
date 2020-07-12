@@ -10,6 +10,7 @@ import java.time.LocalDate;
 import java.time.Month;
 import java.time.Year;
 import java.time.DateTimeException;
+import java.util.InputMismatchException;
 
 public class AppDriver {
 	public static void main(String Args[]) throws Exception {
@@ -20,6 +21,7 @@ public class AppDriver {
 		TaskList taskList = null;
 		ListDisplayManager listDisplayManager = null;
 		FileReader fileReader = null;
+		List<TaskList> taskLists = null;
 
 		while (true) {
 			getMainMenu();
@@ -47,14 +49,13 @@ public class AppDriver {
 
 					switch (todaysTaskChoice) {
 					case 1:
+						boolean valid;
 						taskEntry = getEntryInfo();
-
-						if (taskEntry == null) {
+						if (taskEntry != null) {
+							valid = isValidNewEntryTimes(taskEntry, taskList);
+						} else {
 							break;
 						}
-
-						boolean valid = isValidNewEntryTimes(taskEntry, taskList);
-
 						while (!valid) {
 							System.err.println("\nYou have entered the start or end time which already allocated to other task!\n");
 							System.err.flush();
@@ -68,7 +69,7 @@ public class AppDriver {
 						if (taskList.add(taskEntry)) {
 							writeInTodaysFile(taskList);
 						} else {
-							System.out.println("Unable to Insert Tasks");
+							break;
 						}
 						break;
 
@@ -107,7 +108,7 @@ public class AppDriver {
 										System.err.flush();
 									}
 									break;
-									
+
 								case 2:
 									while (true) {
 										System.out.println("Please enter new end time:");
@@ -186,28 +187,9 @@ public class AppDriver {
 						break;
 
 					case 4:
-						File monthFile = new File(getMonthFileName());
-						boolean monthFileCreation;
-						System.out.println("\nDo You Finished Creating Todays List ?(Yes or No)");
-						String finishOrNot = bufferReader.readLine();
-						List<TaskList> taskLists = new ArrayList<TaskList>();
-						
-						if (finishOrNot.equalsIgnoreCase("Yes")) {
-							monthFileCreation = monthFile.createNewFile();
-							if (monthFileCreation == true || monthFile.length() == 0) {
-								taskLists.add(taskList);
-								WriteInMonthFile(taskLists);
-							} else {
-								fileReader = new FileReader(getMonthFileName());
-								taskLists = fileReader.readLists();
-								taskLists.add(taskList);
-								WriteInMonthFile(taskLists);
-							}
-						} else if (finishOrNot.equalsIgnoreCase("No")) {
-							System.out.println("\nOnly Todays File Updated : " + getTodaysFileName());
-						} else {
-							System.out.println("Your Input is Wrong!!!");
-						}
+						taskLists = new ArrayList<TaskList>();
+						taskLists.add(taskList);
+						WriteInMonthFile(taskLists);
 						break;
 
 					case 5:
@@ -291,13 +273,14 @@ public class AppDriver {
 					case 1:
 						System.out.println("\nPlease Enter Date That You Want to Remove :");
 						LocalDate removeBySingleDate = getLocalDate();
-						
+
 						if (removeBySingleDate == null) {
 							break;
 						}
-						
+
 						System.out.println(removeBySingleDate.getMonth() + "_" + removeBySingleDate.getYear() + ".ser");
-						fileReader = new FileReader(removeBySingleDate.getMonth() + "_" + removeBySingleDate.getYear() + ".ser");
+						fileReader = new FileReader(
+								removeBySingleDate.getMonth() + "_" + removeBySingleDate.getYear() + ".ser");
 						listsOfTaskLists = fileReader.readLists();
 						System.out.println(listsOfTaskLists);
 						boolean found = false;
@@ -310,7 +293,6 @@ public class AppDriver {
 						}
 						System.out.println(found == true ? "Task List Successfully removed" : "Task List Did Not Found");
 						WriteInMonthFile(listsOfTaskLists);
-
 						break;
 
 					case 2:
@@ -332,43 +314,17 @@ public class AppDriver {
 							removeList = false;
 						}
 						break;
-
 					}
 				}
 				break;
 
 			case 4:
-				File monthFile = new File(getMonthFileName());
-				boolean monthFileCreation;
-				System.out.println("\nDo You Finished Creating Todays List ?(Yes or No)");
-				String finishOrNot = bufferReader.readLine();
-				List<TaskList> taskLists = new ArrayList<TaskList>();
-				if (finishOrNot.equalsIgnoreCase("Yes")) {
-					monthFileCreation = monthFile.createNewFile();
-					if (monthFileCreation == true || monthFile.length() == 0) {
-						taskLists.add(taskList);
-						WriteInMonthFile(taskLists);
-						System.out.println("\n\n******************** Thank You For Using Task-Tracker ********************");
-						System.exit(0);
-					} else {
-						fileReader = new FileReader(getMonthFileName());
-						taskLists = fileReader.readLists();
-						taskLists.add(taskList);
-						WriteInMonthFile(taskLists);
-						System.out.println("\n\n******************** Thank You For Using Task-Tracker ********************");
-						System.exit(0);
-					}
-				} else if (finishOrNot.equalsIgnoreCase("No")) {
-					System.out.println("\nOnly Todays File Updated : " + getTodaysFileName());
-					System.out.println("\n\n******************** Thank You For Using Task-Tracker ********************");
-					System.exit(0);
-				} else {
-					System.out.println("Your Input is Wrong!!!");
-				}
+				taskLists = new ArrayList<TaskList>();
+				taskLists.add(taskList);
+				WriteInMonthFile(taskLists);
 				break;
 			}
 		}
-
 	}
 
 	public static boolean isValidNewEntryTimes(TaskEntry taskEntry, TaskList taskList) {
@@ -384,14 +340,11 @@ public class AppDriver {
 
 	public static boolean isTimesIntercetps(TaskEntry taskEntry1, TaskEntry taskEntry2) {
 		boolean valid = true;
-		if (((taskEntry1.getStartTime().compareTo(taskEntry2.getStartTime())) >= 0)
-				&& ((taskEntry1.getStartTime().compareTo(taskEntry2.getEndTime())) <= 0)) {
+		if (((taskEntry1.getStartTime().compareTo(taskEntry2.getStartTime())) >= 0) && ((taskEntry1.getStartTime().compareTo(taskEntry2.getEndTime())) <= 0)) {
 			valid = false;
-		} else if (((taskEntry1.getEndTime().compareTo(taskEntry2.getStartTime())) >= 0)
-				&& ((taskEntry1.getEndTime().compareTo(taskEntry2.getEndTime())) <= 0)) {
+		} else if (((taskEntry1.getEndTime().compareTo(taskEntry2.getStartTime())) >= 0) && ((taskEntry1.getEndTime().compareTo(taskEntry2.getEndTime())) <= 0)) {
 			valid = false;
-		} else if ((taskEntry2.getStartTime().compareTo(taskEntry1.getStartTime()) >= 0)
-				&& (taskEntry2.getEndTime().compareTo(taskEntry1.getEndTime()) <= 0)) {
+		} else if ((taskEntry2.getStartTime().compareTo(taskEntry1.getStartTime()) >= 0) && (taskEntry2.getEndTime().compareTo(taskEntry1.getEndTime()) <= 0)) {
 			valid = false;
 		}
 		return valid;
@@ -457,7 +410,9 @@ public class AppDriver {
 					break;
 				}
 			} catch (NumberFormatException e) {
-				System.out.println("Please Enter Only Number.");
+				System.out.println("Please Enter Only Number :");
+			} catch (InputMismatchException e) {
+				System.out.println("Please Enter Only Number :");
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -517,8 +472,14 @@ public class AppDriver {
 			System.out.println("\nPlease Enter Both Times Again!!!");
 			System.out.println("\nEnter Starting Time :");
 			startTime = getLocalTime();
+			if (startTime == null) {
+				return null;
+			}
 			System.out.println("\nEnter Ending Time :");
 			endTime = getLocalTime();
+			if (endTime == null) {
+				return null;
+			}
 			timeValidator = startingAndEndingTimeValidator(startTime, endTime);
 		}
 		TaskEntry taskEntry = new TaskEntry();
@@ -629,9 +590,11 @@ public class AppDriver {
 				Year = Integer.parseInt(formatDate[2]);
 				return LocalDate.of(Year, month, DateDay);
 			} catch (ArrayIndexOutOfBoundsException e) {
-				System.out.println("\nERROR: (Enter \"C\" to Cancel) or Please Enter Date in Format(DD/MM/YYYY) Again :");
+				System.out
+						.println("\nERROR: (Enter \"C\" to Cancel) or Please Enter Date in Format(DD/MM/YYYY) Again :");
 			} catch (DateTimeException e) {
-				System.out.println("\nERROR: (Enter \"C\" to Cancel) or Please Enter Valid Date in Format(DD/MM/YYYY) :");
+				System.out
+						.println("\nERROR: (Enter \"C\" to Cancel) or Please Enter Valid Date in Format(DD/MM/YYYY) :");
 			} catch (NumberFormatException e) {
 				System.out.println("\nERROR: (Enter \"C\" to Cancel) or Please Enter Only Numbers in Format(DD/MM/YYYY) :");
 			} catch (Exception e) {
@@ -664,16 +627,43 @@ public class AppDriver {
 		System.out.println("*************************************************************************");
 	}
 
-	public static void WriteInMonthFile(List<TaskList> taskLists) throws IOException {
-		FileWriter fileWriter = new FileWriter(getMonthFileName());
-		try {
-			fileWriter.writeLists(taskLists);
-			System.out.println("\nChanges Successfully Written In The File :" + getMonthFileName() + "\n");
-		} catch (Exception e) {
-			System.out.println("Unable to Write In File");
-			e.printStackTrace();
-		} finally {
-			fileWriter.close();
+	public static void WriteInMonthFile(List<TaskList> listOfTasks) throws IOException {
+		BufferedReader bufferReader = new BufferedReader(new InputStreamReader(System.in));
+		File monthFile = new File(getMonthFileName());
+		FileWriter fileWriter = null;
+		FileReader fileReader = null;
+		boolean monthFileCreation;
+		System.out.println("\nDo You Finished Creating Todays List ?(Yes or No)");
+		String finishOrNot = bufferReader.readLine();
+		List<TaskList> taskLists = new ArrayList<TaskList>();
+		if (finishOrNot.equalsIgnoreCase("Yes")) {
+			monthFileCreation = monthFile.createNewFile();
+			if (monthFileCreation == true || monthFile.length() == 0) {
+				fileWriter = new FileWriter(getMonthFileName());
+				fileWriter.writeLists(listOfTasks);
+				System.out.println("Changes SuccessFully Saved In Month File :" + getMonthFileName());
+				System.out.println("\n\n******************** Thank You For Using Task-Tracker ********************");
+				System.exit(0);
+			} else {
+				fileReader = new FileReader(getMonthFileName());
+				taskLists = fileReader.readLists();
+				if (listOfTasks == null) {
+					System.out
+							.println("\n\n******************** Thank You For Using Task-Tracker ********************");
+					System.exit(0);
+				}
+				fileWriter = new FileWriter(getMonthFileName());
+				fileWriter.writeLists(taskLists);
+				System.out.println("Changes SuccessFully Saved In Month File :" + getMonthFileName());
+				System.out.println("\n\n******************** Thank You For Using Task-Tracker ********************");
+				System.exit(0);
+			}
+		} else if (finishOrNot.equalsIgnoreCase("No")) {
+			System.out.println("\nOnly Todays File Updated : " + getTodaysFileName());
+			System.out.println("\n\n******************** Thank You For Using Task-Tracker ********************");
+			System.exit(0);
+		} else {
+			System.out.println("Your Input is Wrong!!!");
 		}
 	}
 
@@ -693,7 +683,7 @@ public class AppDriver {
 	}
 
 	public static final String Task_Tracker_Banner = 
-			"#################################################################################################################################################\n"
+			  "#################################################################################################################################################\n"
 			+ "#                                                                                                                                               #\n"
 			+ "# ###########   #########       ########   #     ###         ###########   ######     ########       #######   #     ###   #########   ######   #\n"
 			+ "#      #       #         #     #           #    #                 #       #      #   #        #     #          #    #     #           #      #  #\n"
