@@ -16,10 +16,8 @@ public class AppDriver {
 	public static void main(String Args[]) throws Exception {
 		System.out.println("\n\n" + Task_Tracker_Banner);
 
-		BufferedReader bufferReader = new BufferedReader(new InputStreamReader(System.in));
 		TaskEntry taskEntry = null;
 		TaskList taskList = null;
-		ListDisplayManager listDisplayManager = null;
 		FileReader fileReader = null;
 		List<TaskList> taskLists = null;
 
@@ -76,100 +74,9 @@ public class AppDriver {
 					case 2:
 						if (taskList.getTaskEntryList().size() > 0) {
 							System.out.println("\nPlease Enter Your Task Number to Update :");
-
 							int taskNumberForEdit = getChoice(1, taskList.getTaskEntryList().size());
 							taskEntry = taskList.getTaskEntryList().get(taskNumberForEdit - 1);
-
-							boolean iterate = true;
-
-							while (iterate) {
-								updateListMenu();
-								int updateChoice = getChoice(1, 6);
-								TaskEntry tempTaskEntry = (TaskEntry) taskEntry.clone();
-
-								switch (updateChoice) {
-								case 1:
-									while (true) {
-										System.out.println("Please enter new start time:");
-										LocalTime newStartTime = getLocalTime();
-										if (newStartTime == null) {
-											break;
-										}
-
-										tempTaskEntry = (TaskEntry) taskEntry.clone();
-
-										if ((newStartTime.compareTo(taskEntry.getEndTime()) < 0)
-												&& (isValidUpdateEntryTimes(tempTaskEntry, taskList,
-														taskNumberForEdit - 1))) {
-											taskEntry.setStartTime(newStartTime);
-											break;
-										}
-										System.err.println("\nYou have entered the start time which already allocated to other task!\n");
-										System.err.flush();
-									}
-									break;
-
-								case 2:
-									while (true) {
-										System.out.println("Please enter new end time:");
-										LocalTime newEndTime = getLocalTime();
-										if (newEndTime == null) {
-											break;
-										}
-										tempTaskEntry = (TaskEntry) taskEntry.clone();
-
-										if ((newEndTime.compareTo(taskEntry.getStartTime()) > 0)
-												&& (isValidUpdateEntryTimes(tempTaskEntry, taskList,
-														taskNumberForEdit - 1))) {
-											taskEntry.setEndTime(newEndTime);
-											break;
-										}
-										System.err.println("\nYou have entered the end time which already allocated to other task!\n");
-										System.err.flush();
-									}
-									break;
-								case 3:
-									String newType = "";
-									while (true) {
-										System.out.println("Please enter new type:");
-										newType = bufferReader.readLine();
-										if ((newType.length() > 0) && (newType.length() <= 20)) {
-											taskEntry.setType(newType);
-											break;
-										}
-										System.out.println("\nThe type should not empty and it's leghth should be less than or equal 20.\n");
-									}
-									break;
-								case 4:
-									String newDesc = "";
-									while (true) {
-										System.out.println("Pease enter new description:");
-										newDesc = bufferReader.readLine();
-										if (newDesc.length() > 0) {
-											taskEntry.setDescription(newDesc);
-											break;
-										}
-										System.out.println("You can't leave the description blank");
-									}
-									break;
-								case 5:
-									writeInTodaysFile(taskList);
-									System.out.println("Entry Successfull Edited");
-									iterate = false;
-									break;
-								case 6:
-									if (confirmExit()) {
-										iterate = false;
-									}
-									break;
-
-								default:
-									System.out.println("Invalid Choice!!");
-									break;
-								}
-
-							}
-
+							updateEntry(taskEntry, taskList, taskNumberForEdit);
 						} else {
 							System.out.println("\nYour Todays Task List is Empty\n");
 						}
@@ -202,62 +109,12 @@ public class AppDriver {
 
 			case 2:
 				File monthFileShow = new File(getMonthFileName());
-				monthFileShow.createNewFile();
-
-				boolean mainMenu = true;
-
-				while (mainMenu) {
-					if (monthFileShow.length() == 0) {
-						System.out.println("Your File is Empty " + getMonthFileName());
-						break;
-					}
-					printShowTaskListInfo();
-					System.out.println("\nPlease Enter Your Choice :");
-					int showListChoice = getChoice(1, 5);
-
-					fileReader = new FileReader(getMonthFileName());
-					List<TaskList> monthTasks = fileReader.readLists();
-					listDisplayManager = new ListDisplayManager(monthTasks);
-
-					switch (showListChoice) {
-					case 1:
-						listDisplayManager.showListAll();
-						break;
-
-					case 2:
-						System.out.println("Enter Date of Task List That You are Looking For :");
-						LocalDate Date = getLocalDate();
-						if (Date == null) {
-							break;
-						}
-						listDisplayManager.showListByDate(Date);
-						break;
-
-					case 3:
-						listDisplayManager.showYesterdaysList();
-						break;
-
-					case 4:
-						System.out.println("\nPlease Enter From Which Date Do You Want to get Tasks :");
-						LocalDate fromDate = getLocalDate();
-						if (fromDate == null) {
-							break;
-						}
-						System.out.println("\nPlease Enter Last Date of Tasks You are Looking For :");
-						LocalDate toDate = getLocalDate();
-						if (toDate == null) {
-							break;
-						}
-						listDisplayManager.showListFromToDate(fromDate, toDate);
-						break;
-
-					case 5:
-						if (confirmExit()) {
-							mainMenu = false;
-						}
-						break;
-					}
-
+				boolean createsFile = monthFileShow.createNewFile();
+				if (createsFile || monthFileShow.length() == 0) {
+					System.out.println("Your File is Empty " + getMonthFileName());
+					break;
+				} else {
+					showTaskLists();
 				}
 				break;
 
@@ -279,8 +136,7 @@ public class AppDriver {
 						}
 
 						System.out.println(removeBySingleDate.getMonth() + "_" + removeBySingleDate.getYear() + ".ser");
-						fileReader = new FileReader(
-								removeBySingleDate.getMonth() + "_" + removeBySingleDate.getYear() + ".ser");
+						fileReader = new FileReader(removeBySingleDate.getMonth() + "_" + removeBySingleDate.getYear() + ".ser");
 						listsOfTaskLists = fileReader.readLists();
 						System.out.println(listsOfTaskLists);
 						boolean found = false;
@@ -513,14 +369,11 @@ public class AppDriver {
 				Minute = Integer.parseInt(TimeConvertor[1]);
 				return LocalTime.of(Hour, Minute);
 			} catch (ArrayIndexOutOfBoundsException e) {
-				System.out.println(
-						"\nERROR : (Enter \"C\" to Cancel) or Please Enter Time in Following Format (HH : MM) :");
+				System.out.println("\nERROR : (Enter \"C\" to Cancel) or Please Enter Time in Following Format (HH : MM) :");
 			} catch (DateTimeException e) {
-				System.out.println(
-						"\nERROR : (Enter \"C\" to Cancel) or Please Enter Valid Time (0-23 : 0:59) in Format (HH:MM):");
+				System.out.println("\nERROR : (Enter \"C\" to Cancel) or Please Enter Valid Time (0-23 : 0:59) in Format (HH:MM):");
 			} catch (NumberFormatException e) {
-				System.out
-						.println("\nERROR : (Enter \"C\" to Cancel) or Please Enter Only Numbers In Format (HH:MM) :");
+				System.out.println("\nERROR : (Enter \"C\" to Cancel) or Please Enter Only Numbers In Format (HH:MM) :");
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -550,6 +403,58 @@ public class AppDriver {
 		System.out.println("| |             Press (5) to Main Menu                                | |");
 		System.out.println("| |                                                                   | |");
 		System.out.println("*************************************************************************");
+	}
+
+	public static void showTaskLists() throws IOException {
+		boolean mainMenu = true;
+		while (mainMenu) {
+			printShowTaskListInfo();
+			System.out.println("\nPlease Enter Your Choice :");
+			int showListChoice = getChoice(1, 5);
+			FileReader fileReader = new FileReader(getMonthFileName());
+			List<TaskList> monthTasks = fileReader.readLists();
+			ListDisplayManager listDisplayManager = new ListDisplayManager(monthTasks);
+
+			switch (showListChoice) {
+			case 1:
+				listDisplayManager.showListAll();
+				break;
+
+			case 2:
+				System.out.println("Enter Date of Task List That You are Looking For :");
+				LocalDate Date = getLocalDate();
+				if (Date == null) {
+					break;
+				}
+				listDisplayManager.showListByDate(Date);
+				break;
+
+			case 3:
+				listDisplayManager.showYesterdaysList();
+				break;
+
+			case 4:
+				System.out.println("\nPlease Enter From Which Date Do You Want to get Tasks :");
+				LocalDate fromDate = getLocalDate();
+				if (fromDate == null) {
+					break;
+				}
+				System.out.println("\nPlease Enter Last Date of Tasks You are Looking For :");
+				LocalDate toDate = getLocalDate();
+				if (toDate == null) {
+					break;
+				}
+				listDisplayManager.showListFromToDate(fromDate, toDate);
+				break;
+
+			case 5:
+				if (confirmExit()) {
+					mainMenu = false;
+				}
+				break;
+			}
+
+		}
 	}
 
 	public static String getMonthFileName() throws IOException {
@@ -590,11 +495,9 @@ public class AppDriver {
 				Year = Integer.parseInt(formatDate[2]);
 				return LocalDate.of(Year, month, DateDay);
 			} catch (ArrayIndexOutOfBoundsException e) {
-				System.out
-						.println("\nERROR: (Enter \"C\" to Cancel) or Please Enter Date in Format(DD/MM/YYYY) Again :");
+				System.out.println("\nERROR: (Enter \"C\" to Cancel) or Please Enter Date in Format(DD/MM/YYYY) Again :");
 			} catch (DateTimeException e) {
-				System.out
-						.println("\nERROR: (Enter \"C\" to Cancel) or Please Enter Valid Date in Format(DD/MM/YYYY) :");
+				System.out.println("\nERROR: (Enter \"C\" to Cancel) or Please Enter Valid Date in Format(DD/MM/YYYY) :");
 			} catch (NumberFormatException e) {
 				System.out.println("\nERROR: (Enter \"C\" to Cancel) or Please Enter Only Numbers in Format(DD/MM/YYYY) :");
 			} catch (Exception e) {
@@ -627,6 +530,95 @@ public class AppDriver {
 		System.out.println("*************************************************************************");
 	}
 
+	public static void updateEntry(TaskEntry taskEntry, TaskList taskList, int taskNumberForEdit) throws Exception {
+		BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(System.in));
+		boolean iterate = true;
+
+		while (iterate) {
+			updateListMenu();
+			int updateChoice = getChoice(1, 6);
+			TaskEntry tempTaskEntry = (TaskEntry) taskEntry.clone();
+
+			switch (updateChoice) {
+			case 1:
+				while (true) {
+					System.out.println("Please enter new start time:");
+					LocalTime newStartTime = getLocalTime();
+					if (newStartTime == null) {
+						break;
+					}
+
+					tempTaskEntry = (TaskEntry) taskEntry.clone();
+
+					if ((newStartTime.compareTo(taskEntry.getEndTime()) < 0) && (isValidUpdateEntryTimes(tempTaskEntry, taskList, taskNumberForEdit - 1))) {
+						taskEntry.setStartTime(newStartTime);
+						break;
+					}
+					System.err.println("\nYou have entered the start time which already allocated to other task!\n");
+					System.err.flush();
+				}
+				break;
+
+			case 2:
+				while (true) {
+					System.out.println("Please enter new end time:");
+					LocalTime newEndTime = getLocalTime();
+					if (newEndTime == null) {
+						break;
+					}
+					tempTaskEntry = (TaskEntry) taskEntry.clone();
+
+					if ((newEndTime.compareTo(taskEntry.getStartTime()) > 0) && (isValidUpdateEntryTimes(tempTaskEntry, taskList, taskNumberForEdit - 1))) {
+						taskEntry.setEndTime(newEndTime);
+						break;
+					}
+					System.err.println("\nYou have entered the end time which already allocated to other task!\n");
+					System.err.flush();
+				}
+				break;
+			case 3:
+				String newType = "";
+				while (true) {
+					System.out.println("Please enter new type:");
+					newType = bufferedReader.readLine();
+					if ((newType.length() > 0) && (newType.length() <= 20)) {
+						taskEntry.setType(newType);
+						break;
+					}
+					System.out.println("\nThe type should not empty and it's leghth should be less than or equal 20.\n");
+				}
+				break;
+			case 4:
+				String newDesc = "";
+				while (true) {
+					System.out.println("Pease enter new description:");
+					newDesc = bufferedReader.readLine();
+					if (newDesc.length() > 0) {
+						taskEntry.setDescription(newDesc);
+						break;
+					}
+					System.out.println("You can't leave the description blank");
+				}
+				break;
+			case 5:
+				writeInTodaysFile(taskList);
+				System.out.println("Entry Successfully Edited");
+				iterate = false;
+				break;
+			case 6:
+				if (confirmExit()) {
+					iterate = false;
+				}
+				break;
+
+			default:
+				System.out.println("Invalid Choice!!");
+				break;
+			}
+
+		}
+	}
+
 	public static void WriteInMonthFile(List<TaskList> listOfTasks) throws IOException {
 		BufferedReader bufferReader = new BufferedReader(new InputStreamReader(System.in));
 		File monthFile = new File(getMonthFileName());
@@ -648,11 +640,11 @@ public class AppDriver {
 				fileReader = new FileReader(getMonthFileName());
 				taskLists = fileReader.readLists();
 				if (listOfTasks == null) {
-					System.out
-							.println("\n\n******************** Thank You For Using Task-Tracker ********************");
+					System.out.println("\n\n******************** Thank You For Using Task-Tracker ********************");
 					System.exit(0);
 				}
 				fileWriter = new FileWriter(getMonthFileName());
+				taskLists = listOfTasks;
 				fileWriter.writeLists(taskLists);
 				System.out.println("Changes SuccessFully Saved In Month File :" + getMonthFileName());
 				System.out.println("\n\n******************** Thank You For Using Task-Tracker ********************");
@@ -683,7 +675,7 @@ public class AppDriver {
 	}
 
 	public static final String Task_Tracker_Banner = 
-			  "#################################################################################################################################################\n"
+			"#################################################################################################################################################\n"
 			+ "#                                                                                                                                               #\n"
 			+ "# ###########   #########       ########   #     ###         ###########   ######     ########       #######   #     ###   #########   ######   #\n"
 			+ "#      #       #         #     #           #    #                 #       #      #   #        #     #          #    #     #           #      #  #\n"
